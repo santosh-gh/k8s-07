@@ -4,18 +4,15 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  serviceConnection: 'arm-svc-con'
-  aksCluster: 'aks-onlinestore-dev-uksouth-001'
-  aksResourceGroup: 'rg-onlinestore-dev-uksouth-001'
-  acrServiceConnection: 'acr-svc-connection'
-  aksServiceConnection: 'aks-svc-connection'
-  acrName: 'acronlinestoredevuksouth001'
-  namespace: 'default'
-  environment: "dev"
-  artifactName: 'storehelmchart'
-  helmChartName: 'mychart'
-  imageTag: v1 #$(Build.BuildId)   
-  imageName: 'store-front'
+  - group: 'k8s-dev'
+  - name: chartName 
+    value: 'storehelmchart'
+  - name: helmChartPath 
+    value: './storehelmchart/'
+  - name: imageTag
+    value: $(Build.BuildId)
+  - name: imageName
+    value: 'store-front'
 
 stages:
   - stage: Build
@@ -35,12 +32,6 @@ stages:
               imageName: $(imageName)
               dockerFilePath: '$(Build.sourcesdirectory)/app/store-front/Dockerfile'
               tag: $(imageTag)
-
-          - task: PublishPipelineArtifact@1
-            displayName: Publish Manifest
-            inputs:
-              artifactName: $(artifactName)
-              path: $(artifactName)
 
   - stage: HelmPackagePush
     displayName: Helm Package and Push
@@ -64,13 +55,13 @@ stages:
             az acr login --name ${{ variables.acrName }}
 
             sed -i "s/tag:.*/tag: $(imageTag)/" ./${{ variables.helmChartName }}/store-front/values.yaml
-            cat ./${{ variables.helmChartName }}/store-front/values.yaml
+            cat ./${{ variables.chartName }}/store-front/values.yaml
 
             echo "Enabling OCI support"
             export HELM_EXPERIMENTAL_OCI=1
 
             echo "Push Helm chart to ACR"
-            helm push ./${{ variables.helmChartName }}-${{ variables.helmChartVersion }}.tgz oci://${{ variables.acrName }}.azurecr.io/helm
+            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://${{ variables.acrName }}.azurecr.io/helm
 
   - stage: Deploy
     displayName: Deploy to AKS
@@ -98,7 +89,7 @@ stages:
             az aks get-credentials --name $(aksCluster) --resource-group $(aksResourceGroup) --overwrite-existing
 
             echo "Pull Helm chart from ACR"
-            helm pull oci://${{ variables.acrName }}.azurecr.io/helm/${{ variables.helmChartName }} --version ${{ variables.helmChartVersion }} --untar
+            helm pull oci://${{ variables.acrName }}.azurecr.io/helm/${{ variables.chartName }} --version ${{ variables.helmChartVersion }} --untar
 
       - task: HelmDeploy@1
         displayName: Helm Upgrade/Install
@@ -110,7 +101,7 @@ stages:
           namespace: $(namespace)
           command: upgrade
           chartType: FilePath
-          chartPath: './mychart/store-front'
-          releaseName: 'storeapp'
+          chartPath: './${{ variables.chartName }}/store-front/'
+          releaseName: 'store-front'
           install: true
-          waitForExecution: true                  
+          waitForExecution: true
