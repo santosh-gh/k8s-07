@@ -115,6 +115,10 @@ stages:
 
             echo "Pull Helm chart from ACR"
             helm pull oci://$(acrName).azurecr.io/$(helmRepoName)/$(chartName) --version $(helmChartVersion) --untar
+            
+      - script: |
+            echo "Workspace Directory: $(Pipeline.Workspace)"
+            ls -R "$(Pipeline.Workspace)"
 
       - task: HelmDeploy@1
         displayName: Helm Upgrade/Install
