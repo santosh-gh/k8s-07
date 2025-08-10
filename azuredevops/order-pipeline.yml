@@ -19,23 +19,23 @@ variables:
     value: 'order'
 
 stages:
-  - stage: Build
-    displayName: Build and Publish
-    jobs:
-      - job: BuildPublishDockerImages
-        displayName: Build Publish Docker Images
-        steps:
-          - task: DockerInstaller@0
-            displayName: Install Docker
-            inputs:
-              dockerVersion: '17.09.0-ce'
+  # - stage: Build
+  #   displayName: Build and Publish
+  #   jobs:
+  #     - job: BuildPublishDockerImages
+  #       displayName: Build Publish Docker Images
+  #       steps:
+  #         - task: DockerInstaller@0
+  #           displayName: Install Docker
+  #           inputs:
+  #             dockerVersion: '17.09.0-ce'
 
-          - template: appTemplates/build.yml
-            parameters:
-              acrServiceConnection: $(acrServiceConnection)
-              imageName: $(imageName)
-              dockerFilePath: '$(Build.sourcesdirectory)/app/order-service/Dockerfile'
-              tag: $(imageTag)
+  #         - template: appTemplates/build.yml
+  #           parameters:
+  #             acrServiceConnection: $(acrServiceConnection)
+  #             imageName: $(imageName)
+  #             dockerFilePath: '$(Build.sourcesdirectory)/app/order-service/Dockerfile'
+  #             tag: $(imageTag)
 
   - stage: HelmPackagePush
     displayName: Helm Package and Push
