@@ -126,7 +126,7 @@ stages:
           namespace: $(namespace)
           command: upgrade
           chartType: FilePath
-          chartPath: './'
+          chartPath: './order'
           chartVersion : $(helmChartVersion)
           releaseName: 'order'
           install: true
