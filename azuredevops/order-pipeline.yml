@@ -60,7 +60,7 @@ stages:
             helm package ./$(helmChartPath)/order/ --version $(helmChartVersion)
 
             echo "Login to ACR for Helm push"
-            az acr login --name ${{ variables.acrName }}            
+            az acr login -n $(acrName)          
 
             echo "Enabling OCI support"
             export HELM_EXPERIMENTAL_OCI=1
