@@ -29,10 +29,7 @@ stages:
           azureSubscription: $(serviceConnection)
           scriptType: bash
           scriptLocation: inlineScript
-          inlineScript: |
-            
-            sed -i "s/tag:.*/tag: $(imageTag)/" ./${{ variables.helmChartPath }}/rabbitmq/values.yaml
-            cat ./${{ variables.helmChartPath }}/rabbitmq/values.yaml            
+          inlineScript: |        
             
             echo "Package Helm chart"
             helm package ./$(helmChartPath)/rabbitmq/ --version $(helmChartVersion)
