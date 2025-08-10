@@ -140,3 +140,20 @@
 # Clean the Azure resources
 
     az group delete --name rg-onlinestore-dev-uksouth-001 --yes --no-wait
+
+
+    helm registry login $ACR_NAME.azurecr.io
+
+    export HELM_EXPERIMENTAL_OCI=1
+    On Helm v3.8.0 and later, OCI is supported by default — no environment variable needed.
+
+    helm package ./storehelmchart/order  --version 0.2.0
+
+    helm push order-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
+
+    helm pull oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
+
+
+    helm install order-release oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
+
+
