@@ -94,7 +94,7 @@ stages:
             az aks get-credentials --name $(aksCluster) --resource-group $(aksResourceGroup) --overwrite-existing
 
             echo "Pull Helm chart from ACR"
-            helm pull oci://${{ variables.acrName }}.azurecr.io/$(helmRepoName)/${{ variables.chartName }} --version ${{ variables.helmChartVersion }} --untar
+            helm pull oci://$(acrName).azurecr.io/$(helmRepoName)/$(chartName) --version $(helmChartVersion) --untar
 
       - task: HelmDeploy@1
         displayName: Helm Upgrade/Install
