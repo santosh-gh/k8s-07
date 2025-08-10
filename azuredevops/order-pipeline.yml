@@ -57,7 +57,7 @@ stages:
             cat ./${{ variables.helmChartPath }}/order/values.yaml            
             
             echo "Package Helm chart"
-            helm package ./$(helmChartPath)/order/' --version $(helmChartVersion)
+            helm package ./$(helmChartPath)/order/ --version $(helmChartVersion)
 
             echo "Login to ACR for Helm push"
             az acr login --name ${{ variables.acrName }}            
