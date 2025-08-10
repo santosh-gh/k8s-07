@@ -20,10 +20,10 @@ variables:
 
 stages:
   - stage: Build
-    displayName: Build and Publish
+    displayName: Docker Build and Push
     jobs:
       - job: BuildPublishDockerImages
-        displayName: Build Publish Docker Images
+        displayName: Build nad push Docker Images
         steps:
           - task: DockerInstaller@0
             displayName: Install Docker
@@ -106,7 +106,7 @@ stages:
           namespace: $(namespace)
           command: upgrade
           chartType: FilePath
-          chartPath: './${{ variables.helmRepoName }}/$(chartName)/'
+          chartPath: './$(helmRepoName)/'
           chartVersion : $(helmChartVersion)
           releaseName: 'order'
           install: true
