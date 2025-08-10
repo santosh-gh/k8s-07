@@ -18,6 +18,11 @@
 
     Part5: Deploying microservice applications in AKS using Helm Chat and Azure Pipeline
     GitHub: https://github.com/santosh-gh/k8s-04
+    YouTube: https://www.youtube.com/watch?v=MnWe2KGRrxg&t=883s
+
+    Part6: Deploying microservice applications in AKS using Helm Chat and Azure Pipeline
+           With dynamically update the image tag in values.yaml
+    GitHub: https://github.com/santosh-gh/k8s-06
     YouTube: https://www.youtube.com/watch?v=VAiR3sNavh0
 
 # Architesture
@@ -107,6 +112,8 @@
         RESOURCE_GROUP="rg-onlinestore-dev-uksouth-001"
         AKS_NAME="aks-onlinestore-dev-uksouth-001"
         az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
+
+        alias k=kubectl
 
     # Short name for kubectl
 

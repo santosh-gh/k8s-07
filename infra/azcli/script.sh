@@ -25,6 +25,7 @@ az aks create \
   --generate-ssh-keys
 
 
+
 # # Create AKS Cluster (without ACR integration yet)
 # Create a Kubernetes clusteraz aks create --resource-group $RESOURCE_GROUP \
 #               --name $AKS_NAME \
