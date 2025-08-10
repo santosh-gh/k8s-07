@@ -5,10 +5,14 @@ pool:
 
 variables:
   - group: 'k8s-dev'
+  - name: helmRepoName
+    value: 'helm'
   - name: chartName 
-    value: 'storehelmchart'
+    value: 'config'
   - name: helmChartPath 
     value: './storehelmchart/'
+  - name: helmChartVersion
+    value: '0.1.0'
 
 stages:
   - stage: HelmPackagePush
@@ -26,17 +30,21 @@ stages:
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
+            
+            sed -i "s/tag:.*/tag: $(imageTag)/" ./${{ variables.helmChartPath }}/config/values.yaml
+            cat ./${{ variables.helmChartPath }}/orconfigder/values.yaml            
+            
             echo "Package Helm chart"
-            helm package ./${{ variables.helmChartPath }} --version ${{ variables.helmChartVersion }} -d .
+            helm package ./$(helmChartPath)/config/ --version $(helmChartVersion)
 
             echo "Login to ACR for Helm push"
-            az acr login --name ${{ variables.acrName }}
+            az acr login -n $(acrName)          
 
             echo "Enabling OCI support"
             export HELM_EXPERIMENTAL_OCI=1
 
             echo "Push Helm chart to ACR"
-            helm push ./${{ variables.helmChartName }}-${{ variables.helmChartVersion }}.tgz oci://${{ variables.acrName }}.azurecr.io/helm
+            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://$(acrName).azurecr.io/$(helmRepoName)               
 
   - stage: Deploy
     displayName: Deploy to AKS
@@ -48,23 +56,35 @@ stages:
       steps:
       - checkout: self
 
+      - script: |
+            echo "Installing tar, gzip and build-essential"
+            sudo apt update
+            sudo apt install tar gzip build-essential
+        displayName: Installing tar
+
       - task: AzureCLI@2
         inputs:
           azureSubscription: $(serviceConnection)
           scriptType: bash
           scriptLocation: inlineScript
-          inlineScript: |
+          inlineScript: |          
+
             echo "Set Helm OCI support"
             export HELM_EXPERIMENTAL_OCI=1
 
-            echo "Login to ACR"
-            az acr login --name ${{ variables.acrName }}
+            echo "Login to ACR for Helm push"
+            az acr login -n $(acrName) 
 
             echo "Login to AKS"
             az aks get-credentials --name $(aksCluster) --resource-group $(aksResourceGroup) --overwrite-existing
 
             echo "Pull Helm chart from ACR"
-            helm pull oci://${{ variables.acrName }}.azurecr.io/helm/${{ variables.helmChartName }} --version ${{ variables.helmChartVersion }} --untar
+            helm pull oci://$(acrName).azurecr.io/$(helmRepoName)/$(chartName) --version $(helmChartVersion) --untar
+            
+      - script: |
+            echo "Workspace Directory: $(Pipeline.Workspace)"
+            ls -R "$(Pipeline.Workspace)"
+        displayName: Workspace Directory
 
       - task: HelmDeploy@1
         displayName: Helm Upgrade/Install
@@ -76,7 +96,8 @@ stages:
           namespace: $(namespace)
           command: upgrade
           chartType: FilePath
-          chartPath: '${{ variables.chartName }}/config'
+          chartPath: './config'
+          chartVersion : $(helmChartVersion)
           releaseName: 'config'
           install: true
-          waitForExecution: true                  
+          waitForExecution: true

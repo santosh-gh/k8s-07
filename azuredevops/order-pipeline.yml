@@ -66,23 +66,7 @@ stages:
             export HELM_EXPERIMENTAL_OCI=1
 
             echo "Push Helm chart to ACR"
-            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://$(acrName).azurecr.io/$(helmRepoName)  
-
-      - script: |
-            echo "Workspace Directory: $(Pipeline.Workspace)"
-            ls -R "$(Pipeline.Workspace)"  
-
-            echo "ArtifactStagingDirectory Directory: $(Build.ArtifactStagingDirectory)"
-            ls -R "$(Build.ArtifactStagingDirectory)" 
-
-            echo "Build.SourcesDirectory: $(Build.SourcesDirectory)"
-            ls -R "$(Build.SourcesDirectory)" 
-
-            echo "Build.StagingDirectory: $(Build.StagingDirectory)"
-            ls -R "$(Build.StagingDirectory)" 
-
-            echo "System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)"
-            ls -R "$(System.DefaultWorkingDirectory)"         
+            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://$(acrName).azurecr.io/$(helmRepoName)               
 
   - stage: Deploy
     displayName: Deploy to AKS
@@ -94,15 +78,18 @@ stages:
       steps:
       - checkout: self
 
+      - script: |
+            echo "Installing tar, gzip and build-essential"
+            sudo apt update
+            sudo apt install tar gzip build-essential
+        displayName: Installing tar
+
       - task: AzureCLI@2
         inputs:
           azureSubscription: $(serviceConnection)
           scriptType: bash
           scriptLocation: inlineScript
-          inlineScript: |
-
-            sudo apt update
-            sudo apt install tar gzip build-essential
+          inlineScript: |          
 
             echo "Set Helm OCI support"
             export HELM_EXPERIMENTAL_OCI=1
@@ -119,6 +106,7 @@ stages:
       - script: |
             echo "Workspace Directory: $(Pipeline.Workspace)"
             ls -R "$(Pipeline.Workspace)"
+        displayName: Workspace Directory
 
       - task: HelmDeploy@1
         displayName: Helm Upgrade/Install
@@ -131,6 +119,7 @@ stages:
           command: upgrade
           chartType: FilePath
           chartPath: './order'
+          chartVersion : $(helmChartVersion)
           releaseName: 'order'
           install: true
           waitForExecution: true
