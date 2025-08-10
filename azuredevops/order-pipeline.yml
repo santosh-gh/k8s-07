@@ -66,7 +66,7 @@ stages:
             export HELM_EXPERIMENTAL_OCI=1
 
             echo "Push Helm chart to ACR"
-            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://$(acrName).azurecr.io            
+            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://$(acrName).azurecr.io/$(helmRepoName)            
 
   - stage: Deploy
     displayName: Deploy to AKS
