@@ -84,7 +84,7 @@ stages:
             az aks get-credentials --name $(aksCluster) --resource-group $(aksResourceGroup) --overwrite-existing
 
             echo "Pull Helm chart from ACR"
-            helm pull oci://$(acrName).azurecr.io/$(helmRepoName)/$(chartName) --version $(helmChartVersion) --untar
+            helm pull oci://$(acrName).azurecr.io/$(helmRepoName)/$(chartName) --version $(helmChartVersion)
             
       - script: |
             echo "Workspace Directory: $(Pipeline.Workspace)"
