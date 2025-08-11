@@ -34,7 +34,7 @@ stages:
             parameters:
               acrServiceConnection: $(acrServiceConnection)
               imageName: $(imageName)
-              dockerFilePath: '$(Build.sourcesdirectory)/app/order-service/Dockerfile'
+              dockerFilePath: '$(Build.sourcesdirectory)/app/product-service/Dockerfile'
               tag: $(imageTag)
 
   - stage: HelmPackagePush
