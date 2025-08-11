@@ -25,6 +25,14 @@
     GitHub: https://github.com/santosh-gh/k8s-06
     YouTube: https://www.youtube.com/watch?v=VAiR3sNavh0
 
+    Part7: Deploying microservice applications in AKS using Helm Chat and Azure Pipeline
+           Store the helm chart in ACR
+           Dynamically update the image tag in values.yaml
+           Dynamically update the Chart version in Chart.yaml
+
+    GitHub: https://github.com/santosh-gh/k8s-07
+    YouTube: https://www.youtube.com/watch?v=VAiR3sNavh0
+
 # Architesture
 
 ![Store Architesture](aks-store-architecture.png)
@@ -47,6 +55,22 @@
     ACR
     HelmChart
     Helmify
+
+# Advantage of storing Helm Chart in ACR
+
+    Private, encrypted storage.
+
+    Access restricted via Azure AD and RBAC.
+
+    Version Management: Charts can be tagged and versioned.
+
+    Easy rollback to previous versions if needed.
+
+    Security & Compliance    
+
+    Supports Azure Policies, private endpoints, and vulnerability scanning.
+
+    improve performance
 
 # Steps
 
@@ -121,6 +145,31 @@
 
         k get all   
 
+Docker Build and Push
+# Log in to ACR
+
+    ACR_NAME="acronlinestoredevuksouth001"
+    az acr login --name $ACR_NAME
+
+# Build and push the Docker images to ACR
+
+    # Order Service
+    docker build -t order ./app/order-service 
+    docker tag order:latest $ACR_NAME.azurecr.io/order:v1
+    docker push $ACR_NAME.azurecr.io/order:v1
+
+    # Product Service
+    docker build -t product ./app/product-service 
+    docker tag product:latest $ACR_NAME.azurecr.io/product:v1
+    docker push $ACR_NAME.azurecr.io/product:v1
+
+    # Store Front Service
+    docker build -t store-front ./app/store-front 
+    docker tag store-front:latest $ACR_NAME.azurecr.io/store-front:v1
+    docker push $ACR_NAME.azurecr.io/store-front:v1
+
+    docker images
+
 # Helm and Helmify
 
     # helmify 
@@ -137,6 +186,40 @@
      
     helm uninstall online-store
 
+# Helm Push and Install    
+
+    OCI refers to the Open Container Initiative, a lightweight, open governance 
+    structure that defines open industry standards for container formats and runtimes. 
+
+    export HELM_EXPERIMENTAL_OCI=1
+    On Helm v3.8.0 and later, OCI is supported by default — no environment variable needed.
+
+    helm registry login $ACR_NAME.azurecr.io
+
+    helm package ./storehelmchart/config  --version 0.1.0
+    helm package ./storehelmchart/rabbitmq  --version 0.1.0
+    helm package ./storehelmchart/order  --version 0.1.0
+    helm package ./storehelmchart/product  --version 0.1.0
+    helm package ./storehelmchart/store-front  --version 0.1.0
+
+    helm push config-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
+    helm push rabbitmq-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
+    helm push order-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
+    helm push product-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
+    helm push store-front-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
+
+    helm pull oci://$ACR_NAME.azurecr.io/helm/config --version 0.1.0
+    helm pull oci://$ACR_NAME.azurecr.io/helm/rabbitmq --version 0.1.0
+    helm pull oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
+    helm pull oci://$ACR_NAME.azurecr.io/helm/product --version 0.1.0
+    helm pull oci://$ACR_NAME.azurecr.io/helm/store-front --version 0.1.0
+
+    helm install config-release oci://$ACR_NAME.azurecr.io/helm/config --version 0.1.0
+    helm install rabbitmq-release oci://$ACR_NAME.azurecr.io/helm/rabbitmq --version 0.1.0
+    helm install order-release oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
+    helm install product-release oci://$ACR_NAME.azurecr.io/helm/product --version 0.1.0
+    helm install store-front-release oci://$ACR_NAME.azurecr.io/helm/store-front --version 0.1.0
+
 # Verify the Deployment
 
     k get pods
@@ -146,21 +229,6 @@
 
 # Clean the Azure resources
 
-    az group delete --name rg-onlinestore-dev-uksouth-001 --yes --no-wait
-
-
-    helm registry login $ACR_NAME.azurecr.io
-
-    export HELM_EXPERIMENTAL_OCI=1
-    On Helm v3.8.0 and later, OCI is supported by default — no environment variable needed.
-
-    helm package ./storehelmchart/order  --version 0.2.0
-
-    helm push order-0.1.0.tgz oci://$ACR_NAME.azurecr.io/helm
-
-    helm pull oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
-
-
-    helm install order-release oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
+    az group delete --name rg-onlinestore-dev-uksouth-001 --yes --no-wait 
 
 
