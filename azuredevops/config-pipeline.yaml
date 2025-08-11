@@ -12,7 +12,7 @@ variables:
   - name: helmChartPath 
     value: './storehelmchart/'
   - name: helmChartVersion
-    value: '0.1.0'
+    value: $(Build.BuildId)
 
 stages:
   - stage: HelmPackagePush
@@ -29,10 +29,18 @@ stages:
           azureSubscription: $(serviceConnection)
           scriptType: bash
           scriptLocation: inlineScript
-          inlineScript: |          
+          inlineScript: |
+            
+            echo "Updating image tag in values.yaml"
+            sed -i "s/tag:.*/tag: $(imageTag)/" ./$(helmChartPath)/$(chartName)/values.yaml
+            cat ./$(helmChartPath)/$(chartName)/values.yaml
+
+            echo "Updating Helm chart version in Chart.yaml"
+            sed -i "s/^version: .*/version: $(helmChartVersion)/" ./$(helmChartPath)/$(chartName)/Chart.yaml
+            cat ./$(helmChartPath)/$(chartName)/Chart.yaml
             
             echo "Package Helm chart"
-            helm package ./$(helmChartPath)/config/ --version $(helmChartVersion)
+            helm package ./$(helmChartPath)/$(chartName)/ --version $(helmChartVersion)
 
             echo "Login to ACR for Helm push"
             az acr login -n $(acrName)          
@@ -53,11 +61,11 @@ stages:
       steps:
       - checkout: self
 
-      - script: |
-            echo "Installing tar, gzip and build-essential"
-            sudo apt update
-            sudo apt install tar gzip build-essential
-        displayName: Installing tar
+      # - script: |
+      #       echo "Installing tar, gzip and build-essential"
+      #       sudo apt update
+      #       sudo apt install tar gzip build-essential
+      #   displayName: Installing tar
 
       - task: AzureCLI@2
         inputs:
@@ -93,8 +101,8 @@ stages:
           namespace: $(namespace)
           command: upgrade
           chartType: FilePath
-          chartPath: './config'
+          chartPath: './$(chartName)-$(helmChartVersion).tgz'
           chartVersion : $(helmChartVersion)
-          releaseName: 'config'
+          # releaseName: $(chartName)
           install: true
           waitForExecution: true

@@ -12,7 +12,7 @@ variables:
   - name: helmChartPath 
     value: './storehelmchart/'
   - name: helmChartVersion
-    value: '0.1.0'
+    value: $(Build.BuildId)
   - name: imageTag
     value: $(Build.BuildId)
   - name: imageName
@@ -34,7 +34,7 @@ stages:
             parameters:
               acrServiceConnection: $(acrServiceConnection)
               imageName: $(imageName)
-              dockerFilePath: '$(Build.sourcesdirectory)/app/store-front/Dockerfile'
+              dockerFilePath: '$(Build.sourcesdirectory)/app/order-service/Dockerfile'
               tag: $(imageTag)
 
   - stage: HelmPackagePush
@@ -53,11 +53,16 @@ stages:
           scriptLocation: inlineScript
           inlineScript: |
             
-            sed -i "s/tag:.*/tag: $(imageTag)/" ./${{ variables.helmChartPath }}/store-front/values.yaml
-            cat ./${{ variables.helmChartPath }}/store-front/values.yaml            
+            echo "Updating image tag in values.yaml"
+            sed -i "s/tag:.*/tag: $(imageTag)/" ./$(helmChartPath)/$(chartName)/values.yaml
+            cat ./$(helmChartPath)/$(chartName)/values.yaml
+
+            echo "Updating Helm chart version in Chart.yaml"
+            sed -i "s/^version: .*/version: $(helmChartVersion)/" ./$(helmChartPath)/$(chartName)/Chart.yaml
+            cat ./$(helmChartPath)/$(chartName)/Chart.yaml
             
             echo "Package Helm chart"
-            helm package ./$(helmChartPath)/store-front/ --version $(helmChartVersion)
+            helm package ./$(helmChartPath)/$(chartName)/ --version $(helmChartVersion)
 
             echo "Login to ACR for Helm push"
             az acr login -n $(acrName)          
@@ -78,11 +83,11 @@ stages:
       steps:
       - checkout: self
 
-      - script: |
-            echo "Installing tar, gzip and build-essential"
-            sudo apt update
-            sudo apt install tar gzip build-essential
-        displayName: Installing tar
+      # - script: |
+      #       echo "Installing tar, gzip and build-essential"
+      #       sudo apt update
+      #       sudo apt install tar gzip build-essential
+      #   displayName: Installing tar
 
       - task: AzureCLI@2
         inputs:
@@ -118,8 +123,8 @@ stages:
           namespace: $(namespace)
           command: upgrade
           chartType: FilePath
-          chartPath: './store-front'
+          chartPath: './$(chartName)-$(helmChartVersion).tgz'
           chartVersion : $(helmChartVersion)
-          releaseName: 'store-front'
+          # releaseName: $(chartName)
           install: true
           waitForExecution: true
