@@ -124,7 +124,7 @@ stages:
           command: upgrade
           chartType: FilePath
           chartPath: './$(chartName)-$(helmChartVersion).tgz'
-          chartVersion : $(helmChartVersion)
-          # releaseName: $(chartName)
+          # chartVersion : $(helmChartVersion)
+          releaseName: $(chartName)
           install: true
           waitForExecution: true
