@@ -21,9 +21,9 @@
     YouTube: https://www.youtube.com/watch?v=MnWe2KGRrxg&t=883s
 
     Part6: Deploying microservice applications in AKS using Helm Chat and Azure Pipeline
-           With dynamically update the image tag in values.yaml
+           Dynamically update the image tag in values.yaml
     GitHub: https://github.com/santosh-gh/k8s-06
-    YouTube: https://www.youtube.com/watch?v=VAiR3sNavh0
+    YouTube: https://www.youtube.com/watch?v=Nx0defm8T6g&t=11s
 
     Part7: Deploying microservice applications in AKS using Helm Chat and Azure Pipeline
            Store the helm chart in ACR
@@ -219,6 +219,10 @@ Docker Build and Push
     helm install order-release oci://$ACR_NAME.azurecr.io/helm/order --version 0.1.0
     helm install product-release oci://$ACR_NAME.azurecr.io/helm/product --version 0.1.0
     helm install store-front-release oci://$ACR_NAME.azurecr.io/helm/store-front --version 0.1.0
+
+# Clean the k8s namespace
+
+    k delete all --all -n default
 
 # Verify the Deployment
 
