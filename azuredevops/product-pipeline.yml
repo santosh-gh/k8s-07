@@ -24,12 +24,7 @@ stages:
     jobs:
       - job: BuildPublishDockerImages
         displayName: Build nad push Docker Images
-        steps:
-          - task: DockerInstaller@0
-            displayName: Install Docker
-            inputs:
-              dockerVersion: '17.09.0-ce'
-
+        steps:          
           - template: appTemplates/build.yml
             parameters:
               acrServiceConnection: $(acrServiceConnection)
@@ -44,34 +39,15 @@ stages:
       pool:
         vmImage: 'ubuntu-latest'
       steps:
-      - checkout: self
-
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: $(serviceConnection)
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            
-            echo "Updating image tag in values.yaml"
-            sed -i "s/tag:.*/tag: $(imageTag)/" ./$(helmChartPath)/$(chartName)/values.yaml
-            cat ./$(helmChartPath)/$(chartName)/values.yaml
-
-            echo "Updating Helm chart version in Chart.yaml"
-            sed -i "s/^version: .*/version: $(helmChartVersion)/" ./$(helmChartPath)/$(chartName)/Chart.yaml
-            cat ./$(helmChartPath)/$(chartName)/Chart.yaml
-            
-            echo "Package Helm chart"
-            helm package ./$(helmChartPath)/$(chartName)/ --version $(helmChartVersion)
-
-            echo "Login to ACR for Helm push"
-            az acr login -n $(acrName)          
-
-            echo "Enabling OCI support"
-            export HELM_EXPERIMENTAL_OCI=1
-
-            echo "Push Helm chart to ACR"
-            helm push ./${{ variables.chartName }}-${{ variables.helmChartVersion }}.tgz oci://$(acrName).azurecr.io/$(helmRepoName)               
+        - template: appTemplates/helm-push.yml
+          parameters:
+            imageTag: $(imageTag)
+            helmChartPath: $(helmChartPath)
+            chartName: $(chartName)
+            helmChartVersion: $(helmChartVersion) 
+            helmRepoName: $(helmRepoName)
+            acrName: $(acrName)
+            serviceConnection: $(serviceConnection)
 
   - stage: Deploy
     displayName: Deploy to AKS
@@ -81,50 +57,13 @@ stages:
       pool:
         vmImage: 'ubuntu-latest'
       steps:
-      - checkout: self
-
-      # - script: |
-      #       echo "Installing tar, gzip and build-essential"
-      #       sudo apt update
-      #       sudo apt install tar gzip build-essential
-      #   displayName: Installing tar
-
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: $(serviceConnection)
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |          
-
-            echo "Set Helm OCI support"
-            export HELM_EXPERIMENTAL_OCI=1
-
-            echo "Login to ACR for Helm push"
-            az acr login -n $(acrName) 
-
-            echo "Login to AKS"
-            az aks get-credentials --name $(aksCluster) --resource-group $(aksResourceGroup) --overwrite-existing
-
-            echo "Pull Helm chart from ACR"
-            helm pull oci://$(acrName).azurecr.io/$(helmRepoName)/$(chartName) --version $(helmChartVersion)
-            
-      - script: |
-            echo "Workspace Directory: $(Pipeline.Workspace)"
-            ls -R "$(Pipeline.Workspace)"
-        displayName: Workspace Directory
-
-      - task: HelmDeploy@1
-        displayName: Helm Upgrade/Install
-        inputs:
-          connectionType: 'Azure Resource Manager'
-          azureSubscription: $(serviceConnection)
-          azureResourceGroup: $(aksResourceGroup)
-          kubernetesCluster: $(aksCluster)
-          namespace: $(namespace)
-          command: upgrade
-          chartType: FilePath
-          chartPath: './$(chartName)-$(helmChartVersion).tgz'
-          # chartVersion : $(helmChartVersion)
-          releaseName: $(chartName)
-          install: true
-          waitForExecution: true
+        - template: appTemplates/deploy.yml
+          parameters:
+            chartName: $(chartName)
+            helmChartVersion: $(helmChartVersion) 
+            helmRepoName: $(helmRepoName)
+            acrName: $(acrName)
+            aksCluster: $(aksCluster)
+            aksResourceGroup: $(aksResourceGroup) 
+            serviceConnection: $(serviceConnection)
+            namespace: $(namespace)

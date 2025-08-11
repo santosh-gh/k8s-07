@@ -54,7 +54,6 @@ steps:
       command: upgrade
       chartType: FilePath
       chartPath: './${{parameters.chartName}}-${{parameters.helmChartVersion}}.tgz'
-      # chartVersion : ${{parameters.helmChartVersion}}
       releaseName: ${{parameters.chartName}}
       install: true
       waitForExecution: true
