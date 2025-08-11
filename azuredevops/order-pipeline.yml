@@ -47,6 +47,7 @@ stages:
             helmChartVersion: $(helmChartVersion) 
             helmRepoName: $(helmRepoName)
             acrName: $(acrName)
+            serviceConnection: $(serviceConnection)
 
   - stage: Deploy
     displayName: Deploy to AKS

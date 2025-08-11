@@ -11,6 +11,8 @@ parameters:
   type: string
 - name: "acrName"
   type: string
+- name: "serviceConnection"
+  type: string
 
 steps:   
   - checkout: self
