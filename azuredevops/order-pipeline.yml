@@ -59,8 +59,8 @@ stages:
       steps:
         - template: appTemplates/deploy.yml
           parameters:
-            imageTag: $(imageTag)
-            helmChartPath: $(helmChartPath)
+            # imageTag: $(imageTag)
+            # helmChartPath: $(helmChartPath)
             chartName: $(chartName)
             helmChartVersion: $(helmChartVersion) 
             helmRepoName: $(helmRepoName)
